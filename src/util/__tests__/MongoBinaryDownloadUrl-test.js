@@ -71,6 +71,20 @@ describe('MongoBinaryDownloadUrl', () => {
       );
     });
 
+    it.only('for raspbian', async () => {
+      const du = new MongoBinaryDownloadUrl({
+        platform: 'linux',
+        arch: 'x64',
+        version: '3.4.4',
+        os: {
+          dist: 'Raspbian',
+        },
+      });
+      expect(await du.getDownloadUrl()).toBe(
+        'https://downloads.mongodb.org/src/mongodb-src-r3.4.4.tar.gz'
+      );
+    });
+
     it('for win32', async () => {
       const du = new MongoBinaryDownloadUrl({
         platform: 'win32',

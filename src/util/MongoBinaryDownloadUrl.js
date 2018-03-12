@@ -26,7 +26,7 @@ export default class MongoBinaryDownloadUrl {
   os: ?OS;
 
   constructor({ platform, arch, ssl, version, os }: MongoBinaryDownloadUrlOpts) {
-    this.platform = this.translatePlatform(platform);
+    this.platform = this.translatePlatform(platform, os);
     this.arch = this.translateArch(arch, this.platform);
     this.ssl = ssl;
     this.version = version;
@@ -45,7 +45,9 @@ export default class MongoBinaryDownloadUrl {
       name += '-ssl';
     }
 
-    name += `-${this.arch}`;
+    if (this.platform !== 'src') {
+      name += `-${this.arch}`;
+    }
 
     let osString;
     if (this.platform === 'linux' && this.arch !== 'i686') {
@@ -56,14 +58,24 @@ export default class MongoBinaryDownloadUrl {
     if (osString) {
       name += `-${osString}`;
     }
-
-    name += `-${this.version}.${this.getArchiveType()}`;
+    if (this.platform !== 'src') {
+      name += `-${this.version}.${this.getArchiveType()}`;
+    } else {
+      name += `-r${this.version}.${this.getArchiveType()}`;
+    }
 
     return name;
   }
 
   getArchiveType(): string {
-    return this.platform === 'win32' ? 'zip' : 'tgz';
+    switch (this.platform) {
+      case 'win32':
+        return 'zip';
+      case 'src':
+        return 'tar.gz';
+      default:
+        return 'tgz';
+    }
   }
 
   async getos(): Promise<OS> {
@@ -183,7 +195,10 @@ export default class MongoBinaryDownloadUrl {
     return name;
   }
 
-  translatePlatform(platform: string): string {
+  translatePlatform(platform: string, os: OS): string {
+    if (os && os.dist === 'Raspbian') {
+      return 'src';
+    }
     switch (platform) {
       case 'darwin':
         return 'osx';
